@@ -7,6 +7,8 @@ const checkRefreshToken = require('@middleware/checkRefreshToken.js')
 router.post('/registration', authController.registration)
 // вход
 router.post('/login', authController.login)
+// выход
+router.post('/logout', authController.logout)
 // проверка JWT и отправка нового
 router.post('/refresh', checkRefreshToken, authController.refresh)
 

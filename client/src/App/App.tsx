@@ -15,23 +15,18 @@ import './App.css'
 
 const App: React.FC = () => {
 
-    const { logout } = useActions()
-
     // отслеживаем процесс изменения STATE
     const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated)
 
 
-    const login = async () => {
-        await fetch('http://192.168.0.6:5000/api/auth/login', {
+    const reftesh = async () => {
+        await fetch('http://192.168.1.4:5000/api/auth/refresh', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json;charset=utf-8',
             },
             credentials: 'include',
-            body: JSON.stringify({ 
-                "email": "admin@admin.ru", 
-                "password": "Qwerty12" 
-            })
+            body: JSON.stringify({})
         })
         .then(response => response.json())
         .then(response => {
@@ -41,7 +36,7 @@ const App: React.FC = () => {
 
 
     const getUserData = async () => {
-        await fetch('http://192.168.0.6:5000/api/user/profile', {
+        await fetch('http://192.168.1.4:5000/api/user/profile', {
             method: 'GET',
             credentials: 'include',
         }).then(response => response.json())
@@ -60,7 +55,6 @@ const App: React.FC = () => {
                     <Route index element={
                         <>
                             <button onClick={() => getUserData()}> getUserData </button>
-                            <button onClick={() => logout()}> LOGOUT </button>
                         </>
                     }/>
                     <Route path="*" element={<Navigate replace to={`/`} />}/>
@@ -71,7 +65,7 @@ const App: React.FC = () => {
 
     return (
         <>
-            <button onClick={() => login()}> POST/login </button>
+            <button onClick={() => getUserData()}> getUserData </button>
             <Routes>
                 <Route path="/*" element={<Layout />}>
                     <Route path="auth/*" element={<Auth />}/>

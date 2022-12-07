@@ -1,15 +1,66 @@
+// redux
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/dist/query/react";
+import type {
+    BaseQueryFn,
+    FetchArgs,
+    FetchBaseQueryError,
+} from '@reduxjs/toolkit/query'
+import { authReducer } from 'store/auth/auth.slice'
+// import { store } from "store/store";
+// import { useStore } from "react-redux";
+// import type { RootState } from 'store/store'
+// interfaces
 import { 
     IRegistrationRequest, 
     IRegistrationResponse, 
     ILoginRequest, 
     ILoginResponse,
+    ILogoutRequest,
+    ILogoutResponse
 } from 'interfaces/IAuth'
 import { IResponseError } from 'interfaces/IGlobal'
+// antd
 import { message as popUpMessage} from 'antd'
-import { store } from "store/store";
-import { useStore } from "react-redux";
-import type { RootState } from 'store/store'
+
+
+
+const baseQuery = fetchBaseQuery({
+    baseUrl: `${process.env.REACT_APP_SERVER_URL}/api/auth`,
+    prepareHeaders: (headers, { getState }) => {
+            // Если реализовывать хранение токенов в store Redux а не в куках, 
+            // можно получить тут доступ к state через getState
+                // const token = (getState() as RootState).auth.token
+                // if (token) {
+                //   headers.set('authorization', `Bearer ${token}`)
+                // }
+        headers.set('Content-Type', `application/json;charset=utf-8`)
+        return headers
+    },
+    credentials: 'include',
+})
+
+const baseQueryWithReauth: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api, extraOptions) => {
+  let result = await baseQuery(args, api, extraOptions)
+  if (result.error && result.error.status === 401) {
+    // try to get a new token
+    const refreshResult = await baseQuery('refresh', api, extraOptions)
+    if (refreshResult.data) {
+        // store the new token
+        // api.dispatch(tokenReceived(refreshResult.data))
+        console.log('REFRESH')
+        // retry the initial query
+      result = await baseQuery(args, api, extraOptions)
+    } else {
+        console.log('LOGOUT')
+        // api.dispatch(logout())
+    }
+  }
+  return result
+}
 
 
 /**
@@ -18,17 +69,7 @@ import type { RootState } from 'store/store'
  */
 export const authApi = createApi({
     reducerPath: 'auth/api',
-    baseQuery: fetchBaseQuery({
-        baseUrl: `${process.env.REACT_APP_SERVER_URL}/api/auth`,
-        prepareHeaders: (headers, { getState }) => {
-            // By default, if we have a token in the store, let's use that for authenticated requests
-            // const token = (getState() as RootState).auth.token
-            // if (token) {
-            //   headers.set('authorization', `Bearer ${token}`)
-            // }
-            return headers
-        },
-    }),
+    baseQuery: baseQueryWithReauth,
     endpoints: build => ({
         // build.query - для запроса данных
         // build.mutation - для изменения данных
@@ -67,7 +108,20 @@ export const authApi = createApi({
             },
 
         }),
-        
+        logout: build.query<ILogoutResponse, ILogoutRequest>({
+            query: (data: ILogoutRequest) => ({
+                url: 'logout',
+                method: 'POST',
+                body: data
+            }),
+            // transformResponse - какие-то действия с полученными данными
+            transformResponse: (response: ILogoutResponse) => {
+                return response
+            },
+            transformErrorResponse: (response: { status: number, data: IResponseError }) => {
+                return response
+            },
+        }),
     })
 })
 
@@ -78,5 +132,7 @@ export const {
     useLazyRegistrationQuery, 
     useRegistrationQuery,
     useLazyLoginQuery,
-    useLoginQuery
+    useLoginQuery,
+    useLazyLogoutQuery,
+    useLogoutQuery,
 } = authApi

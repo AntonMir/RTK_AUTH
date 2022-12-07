@@ -23,23 +23,20 @@ function generateRefreshToken() {
     const secret = process.env.SECRET_KEY
     const expires = { expiresIn: process.env.TOKEN_REFRESH_EXPIRE }
 
-    // return {
-    //     id: payload.id,
-    //     token: jwt.sign(payload, secret, expires)
-    // }
     return jwt.sign(payload, secret, expires)
 }
 
-const replaceDbRefreshToken = (tokenId, userId) =>
-    Token.destroy({ where: { userId } })
+const replaceDbRefreshToken = async (tokenId, userId) =>
+    await Token.destroy({ where: { userId } })
         .then(() => Token.create({ tokenId, userId }))
 
 
 const updateTokens = (userId) => {
     const access_token = generateAccessToken(userId)
     const refresh_token = generateRefreshToken()
+    const refresh_payload = jwt.decode(refresh_token, process.env.SECRET_KEY)
 
-    return replaceDbRefreshToken(refresh_token.id, userId)
+    return replaceDbRefreshToken(refresh_payload.id, userId)
         .then(() => ({
             access_token,
             refresh_token

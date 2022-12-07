@@ -9,6 +9,12 @@ export interface ILoginResponse {
     isAuthenticated: boolean
 }
 
+export interface ILogoutRequest {}
+
+export interface ILogoutResponse {
+    isAuthenticated: boolean
+}
+
 export interface IRegistrationRequest {
     name: string | null
     email: string | null

@@ -1,8 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
-import type { IUser } from 'interfaces/IUser'
-import { ILoginResponse } from 'interfaces/IAuth'
-import type { RootState } from 'store/store'
+import { ILoginResponse, ILogoutResponse } from 'interfaces/IAuth'
 import initialState from './index'
 
 
@@ -13,8 +11,8 @@ const authSlice = createSlice({
         login(state, { payload }: PayloadAction<ILoginResponse>) {
             state.isAuthenticated = payload.isAuthenticated
         },
-        logout(state) {
-            state.isAuthenticated = false
+        logout(state, { payload }: PayloadAction<ILogoutResponse>) {
+            state.isAuthenticated = payload.isAuthenticated
         },
     }
 })

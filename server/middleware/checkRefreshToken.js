@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken')
  * 2. check validate token
  * 3. next()
  */
-module.exports = function (req, res, next) {
+module.exports = async function (req, res, next) {
     if (req.method === "OPTIONS") {
         // Если параметр запроса отличается от GET, POST, PUT, DELETE, то возвращаем ошибку
         return res.status(400).json({
@@ -15,16 +15,15 @@ module.exports = function (req, res, next) {
     }
 
     try {
+        const { refresh_token } = req.cookies.tokens // берем тело токена из cookies
 
-        const refresh_token = req.cookies.tokens.refresh_token // берем тело токена из cookies
-
-        if (!refresh_token) {
-            // если токена нет, отдаем ошибку
-            return res.status(401).json({ message: 'Не валидный Refresh токен' })
-        }
+        if (!refresh_token) return res.status(401).json({ message: 'Не валидный Refresh токен' })
 
         // Если токен есть, надо расшифровать
-        jwt.verify(refresh_token, process.env.SECRET_KEY)
+        const decodedJwt = jwt.verify(refresh_token, process.env.SECRET_KEY)
+
+        if (decodedJwt.type !== 'refresh') return res.status(400).json({ message: 'Тип токена отличается от \'refresh\'' })
+
         next()
 
     } catch (error) {

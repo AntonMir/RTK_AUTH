@@ -33,17 +33,10 @@ class AuthController {
         // создаем нового пользователя
         const user = await User.create({ name, email, password: hashPassword })
 
-        // генерим ему токены
-        // const newTokens = await updateTokens(user.id)
+        if(!user) return res.status(500).json({ message: `Внутренняя ошибка сервера` })
 
         // после регистрации отдаем токены на клиент
         return res.status(201).json({ message: "Пользователь успешно зарегистрирован" }) 
-        // return res.status(201).json({ 
-        //     tokens: newTokens, 
-        //     email: user.email, 
-        //     name: user.name, 
-        //     message: "Пользователь успешно зарегистрирован" 
-        // }) 
     }
 
 
@@ -66,65 +59,78 @@ class AuthController {
         // генерим ему токены
         const newTokens = await updateTokens(user.id)
 
-        // отправляем куки клиенту
-        // при повторном запросе проверяем на валидность
+        // не смоги сгенерить токен, отдаем ошибку
+        if (!newTokens) return res.status(400).json({ message: 'Ошибка генерации токена' })
+        
+        // ОК возвращаем токены и тело ответа
         return res
             .status(200)
             .cookie('tokens', newTokens, {
                 httpOnly: true,
                 secure: false, // true - запрос должен приходить на сервер только по защищённому каналу (https)
-                sameSite: 'Strict', // None - куки передаются во всех запросах, Lax - более безопасный метод, 
+                sameSite: 'Strict', // режим настройки: для каких сайтов отдам куки 
                 expire: process.env.TOKEN_REFRESH_EXPIRE,
             })
             .json({
                 message: 'Вход выполнен',
                 isAuthenticated: true
             })
-            
+    }
 
-        // после регистрации отдаем токены на клиент
-        return res.status(201).json({ 
-            message: 'Вход выполнен',
-            access_token: newTokens.access_token
-        })
+
+    // выход
+    async logout(req, res) {   
+
+        const tokens = req.cookies.tokens
+        
+        if(tokens) {
+
+            const { access_token } = tokens
+
+            const access_payload = jwt.decode(access_token, process.env.SECRET_KEY)
+            
+            const { userId } = access_payload
+                            
+            // удалим старые токены из базы
+            await Token.destroy({ where: { userId } })
+        }         
+
+        // ОК удаляем токены и тело ответа
+        return res.status(200).clearCookie('tokens').json({ isAuthenticated: false })
     }
 
 
     // Рефреш токен
     async refresh(req, res) {
 
-        const { refreshToken } = req.cookies.refresh_token
-        let decodedJwt;
-        try {
-            // расшифровка
-            decodedJwt = jwt.verify(refreshToken, process.env.SECRET_KEY)
+        const { access_token, refresh_token } = req.cookies.tokens
 
-            if (decodedJwt.type !== 'refresh') return res.status(400).json({ message: 'Тип токена отличается от \'refresh\'' })
+        const access_payload = jwt.decode(access_token, process.env.SECRET_KEY)
+        const refresh_payload = jwt.decode(refresh_token, process.env.SECRET_KEY)
 
-            //  если tokenId в базе не совпадает с tokenId принятого рефреш токена. . .
-            const tokenFromDB = await Token.findOne({ where: { tokenId: decodedJwt.id } })
+        //  если tokenId в базе не совпадает с tokenId принятого рефреш токена. . .
+        const refreshTokenFromDB = await Token.findOne({ where: { tokenId: refresh_payload.id } })
 
-            if (!tokenFromDB) return res.status(400).json({ message: 'Невалидный Refresh токен!' })
+        if (!refreshTokenFromDB) return res.status(400).json({ message: 'Refresh токен отсутствует в базе' })
 
-        } catch (error) {
-            if (error instanceof jwt.TokenExpiredError) {
-                return res.status(400).json({ message: 'Время жизни Refresh токена истекло' })
-            } else if (error instanceof jwt.JsonWebTokenError) {
-                return res.status(400).json({ message: 'Невалидный Refresh токен!' })
-            }
-        }
-        const token = await Token.findOne({ tokenId: decodedJwt.id })
+         // генерим ему токены
+        const newTokens = await updateTokens(access_payload.userId)
 
-        if (!token) return res.status(404).json({ message: 'Refresh токен отсутствует в базе' })
-
-        const newTokens = await updateTokens(token.userId)
-
-        if (!newTokens) return res.status(404).json({ message: 'Ошибка генерации токенов' })
-
-        return res.status(200).json({ 
-            message: 'Новая пара токенов получена',
-            tokens: newTokens,
-        })
+        // не смоги сгенерить токен, отдаем ошибку
+        if (!newTokens) return res.status(400).json({ message: 'Ошибка генерации токена' })
+        
+        // ОК возвращаем токены и тело ответа
+        return res
+            .status(200)
+            .cookie('tokens', newTokens, {
+                httpOnly: true,
+                secure: false, // true - запрос должен приходить на сервер только по защищённому каналу (https)
+                sameSite: 'Strict', // режим настройки: для каких сайтов отдам куки 
+                expire: process.env.TOKEN_REFRESH_EXPIRE,
+            })
+            .json({
+                isAuthenticated: true
+            })
     }
 }
 
