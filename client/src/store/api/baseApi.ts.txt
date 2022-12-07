@@ -1,0 +1,26 @@
+import { createApi } from '@reduxjs/toolkit/query/react'
+import { IUserResponse } from 'interfaces/IUser'
+import { ILoginRequest } from 'interfaces/IAuth'
+import baseQuery from 'store/api/baseQuery'
+
+
+export const baseApi = createApi({
+
+    baseQuery,
+    endpoints: (builder) => ({
+
+      login: builder.mutation<IUserResponse, ILoginRequest>({
+        query: (data) => ({
+          url: 'login',
+          method: 'POST',
+          body: data,
+        }),
+      }),
+
+      protected: builder.mutation<{ message: string }, void>({
+        query: () => 'protected',
+      }),
+    }),
+  })
+  
+//   export const { useLoginMutation, useProtectedMutation } = baseApi
