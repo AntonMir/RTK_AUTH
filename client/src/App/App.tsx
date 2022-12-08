@@ -4,6 +4,8 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 // Redux
 import { useSelector } from 'react-redux'
 import type { RootState } from 'store/store'
+import { store } from 'store/store'
+import { login } from 'store/auth/actions'
 // hooks
 import { useActions } from 'hooks/actions';
 // components
@@ -17,7 +19,6 @@ const App: React.FC = () => {
 
     // отслеживаем процесс изменения STATE
     const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated)
-
 
     const reftesh = async () => {
         await fetch('http://192.168.1.4:5000/api/auth/refresh', {

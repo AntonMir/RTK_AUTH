@@ -7,6 +7,8 @@ import { ILoginRequest } from 'interfaces/IAuth'
 import { useActions } from 'hooks/actions'
 // Redux
 import { useLazyLoginQuery } from 'store/auth/auth.api'
+import { store } from 'store/store'
+import { login } from 'store/auth/actions'
 // ANTD
 import { Button, Form, Input } from 'antd'
 // styles
@@ -15,17 +17,12 @@ import styled from 'styled-components'
 
 const Login: React.FC = () => {
 
-    const {login} = useActions()
-
-    // Lazy - значит, что данные не будут запрашиваться сразу а тоьлко по вызову метода loginQuery
-    const [loginQuery, { isLoading, isSuccess , data }] = useLazyLoginQuery()
-
     const [form, setForm] = useState<ILoginRequest>({ email: '', password: '' })
     
     // Отправка данных регистрационной формы на бэк
-    function submitForm(data: ILoginRequest) {
-        if(data.email) data.email = data.email.toLowerCase()
-        loginQuery(data)
+    function submitForm() {
+        if(form.email) form.email = form.email.toLowerCase()
+        store.dispatch(login(form))
     }
     
     // Фиксируем все изменения полей ввода в state
@@ -33,11 +30,6 @@ const Login: React.FC = () => {
         setForm({ ...form, [event.target.name]: event.target.value })
     }
     
-    // как только приходят данные с сервера фиксирем их в STATE
-    useEffect(() => {
-        data && login(data)
-    }, [data, isSuccess, login])
-
     return (
         <Form>
             <Title>Авторизация</Title>
@@ -58,8 +50,7 @@ const Login: React.FC = () => {
             <FormBtn>
                 <Button 
                     type="primary" 
-                    loading={isLoading}
-                    onClick={() => submitForm(form)}
+                    onClick={submitForm}
                 >
                     Войти
                 </Button>
