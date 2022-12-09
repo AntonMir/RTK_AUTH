@@ -35,6 +35,8 @@ app.use('/', logger)
 
 app.use('/api', routes)
 
+
+
 const start = async () => {
     try {
         await sequelize.authenticate()

@@ -1,14 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState, useEffect } from 'react'
 // navigation
 import { Link } from 'react-router-dom'
 // interfaces
 import { ILoginRequest } from 'interfaces/IAuth'
-// hooks
-import { useActions } from 'hooks/actions'
 // Redux
-import { useLazyLoginQuery } from 'store/auth/auth.api'
 import { store } from 'store/store'
-import { login } from 'store/auth/actions'
+import { login, refresh, logout } from 'store/auth/auth.actions'
 // ANTD
 import { Button, Form, Input } from 'antd'
 // styles
@@ -29,6 +26,8 @@ const Login: React.FC = () => {
     const changeUserData = (event: React.ChangeEvent<HTMLInputElement>) => {
         setForm({ ...form, [event.target.name]: event.target.value })
     }
+
+    
     
     return (
         <Form>

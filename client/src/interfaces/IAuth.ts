@@ -5,8 +5,8 @@ export interface ILoginRequest {
 }
 
 export interface ILoginResponse {
-    message: string
     isAuthenticated: boolean
+    message?: string
 }
 
 export interface ILogoutRequest {}
@@ -16,12 +16,18 @@ export interface ILogoutResponse {
 }
 
 export interface IRegistrationRequest {
-    name: string | null
-    email: string | null
-    password: string | null
-    confirmPassword: string | null
+    name: String
+    email: string
+    password: string
+    confirmPassword: string
 }
 
 export interface IRegistrationResponse {
-    message?: string | null
+    message?: string
+}
+
+export interface IRefreshRequest {}
+
+export interface IRefreshResponse {
+    isAuthenticated: boolean
 }

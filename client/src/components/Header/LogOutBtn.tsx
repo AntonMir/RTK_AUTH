@@ -1,25 +1,15 @@
-import React, { useCallback, useEffect } from 'react'
+import React from 'react'
 // redux
-import { useActions } from 'hooks/actions'
+import { store } from 'store/store'
+import { logout } from 'store/auth/auth.actions'
 // ANTD
 import { LogoutOutlined } from '@ant-design/icons'
-import { useLazyLogoutQuery } from 'store/auth/auth.api'
 
 const LogOutBtn: React.FC = () => {
 
-    const { logout } = useActions()
-
-        // Lazy - значит, что данные не будут запрашиваться сразу а тоьлко по вызову метода loginQuery
-        const [logoutQuery, {isSuccess, data }] = useLazyLogoutQuery()
-
-    const logoutHandler = useCallback(() => {
-        logoutQuery('')
-    }, [logoutQuery])
-
-    // как только приходят данные с сервера фиксирем их в STATE
-    useEffect(() => {
-        data && logout(data)
-    }, [data, isSuccess, logout])
+    const logoutHandler = () => {
+        store.dispatch(logout(''))
+    }
 
     return (
         <div 

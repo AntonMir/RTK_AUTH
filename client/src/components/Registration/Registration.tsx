@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 // navigation
 import { Link, useNavigate } from 'react-router-dom'
 // Redux
-import { useLazyRegistrationQuery } from 'store/auth/auth.api'
+import { registration } from 'store/auth/auth.actions'
+import { store } from 'store/store'
 // interfaces
 import { IRegistrationRequest } from 'interfaces/IAuth'
 // ANTD
@@ -13,10 +14,10 @@ import styled from 'styled-components'
 
 const Registration = () => {
 
-    const navigate = useNavigate()
+    // const navigate = useNavigate()
 
     // хук REDUX для отправки данных при регистрации
-    const [registration ,{ isLoading, isSuccess }] = useLazyRegistrationQuery()
+    // const [registration ,{ isLoading, isSuccess }] = useLazyRegistrationQuery()
 
     // данные для отправки на бэк
     const [form, setForm] = useState<IRegistrationRequest>({ 
@@ -28,20 +29,15 @@ const Registration = () => {
        
 
     // Отправка данных регистрационной формы на сервер
-    function submitForm(data: IRegistrationRequest) {
-        if(data.email) data.email = data.email.toLowerCase()
-        registration(data)
-    }    
+    const submitForm = useCallback(() => {
+        if(form.email) form.email = form.email.toLowerCase()
+        store.dispatch(registration(form))
+    }, [form])
 
     // Фиксируем все изменения полей ввода в state
     const changeUserData = (event: React.ChangeEvent<HTMLInputElement>) => {
         setForm({ ...form, [event.target.name]: event.target.value })
     }
-
-    // если рагистрация прошла успешно, перенаправляем на страницу LOGIN
-    useEffect(() => {
-        isSuccess && navigate('../login')
-    }, [isSuccess, navigate])
     
     return (
         <Form>
@@ -92,8 +88,7 @@ const Registration = () => {
             <FormBtn>
                 <Button 
                     type="primary"
-                    disabled={isLoading}
-                    onClick={() => submitForm(form)}
+                    onClick={submitForm}
                 >
                     Регистрация
                 </Button>

@@ -1,3 +1,9 @@
+/*
+Идет как дополнительный инструменты
+своеобразная мидлвара для любых запросов
+*/
+
+
 // redux
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/dist/query/react";
 import type {
@@ -6,7 +12,8 @@ import type {
     FetchBaseQueryError,
 } from '@reduxjs/toolkit/query'
 import { authReducer } from 'store/auth/auth.slice'
-// import { store } from "store/store";
+import { store } from "store/store";
+import { logout, refresh } from 'store/auth/auth.actions'
 // import { useStore } from "react-redux";
 // import type { RootState } from 'store/store'
 // interfaces
@@ -44,21 +51,20 @@ const baseQueryWithReauth: BaseQueryFn<
   unknown,
   FetchBaseQueryError
 > = async (args, api, extraOptions) => {
-  let result = await baseQuery(args, api, extraOptions)
-  if (result.error && result.error.status === 401) {
-    // try to get a new token
-    const refreshResult = await baseQuery('refresh', api, extraOptions)
-    if (refreshResult.data) {
-        // store the new token
-        // api.dispatch(tokenReceived(refreshResult.data))
-        console.log('REFRESH')
-        // retry the initial query
-      result = await baseQuery(args, api, extraOptions)
-    } else {
-        console.log('LOGOUT')
-        // api.dispatch(logout())
+    let result = await baseQuery(args, api, extraOptions)
+
+    if (result.error && result.error.status === 401) {
+        const refreshResult = await store.dispatch(refresh(''))
+        console.log('refreshResult', refreshResult)
+        // const refreshResult = await baseQuery('refresh', api, extraOptions)
+        if (refreshResult) {
+            result = await baseQuery(args, api, extraOptions)
+        } else {
+            console.log('LOGOUT')
+            store.dispatch(logout(''))
+        }
     }
-  }
+
   return result
 }
 
@@ -83,7 +89,7 @@ export const authApi = createApi({
             }),
             // transformResponse - какие-то действия с полученными данными
             transformResponse: (response: IRegistrationResponse) => {
-                popUpMessage.success(response.message)                
+                popUpMessage.success(response.message)  
                 return response
             },
             transformErrorResponse: (error: { status: string | number }, meta, args) => {
@@ -91,37 +97,37 @@ export const authApi = createApi({
                 return error
             }
         }),
-        login: build.query<ILoginResponse, ILoginRequest>({
-            query: (data: ILoginRequest) => ({
-                url: 'login',
-                method: 'POST',
-                body: data
-            }),
-            // transformResponse - какие-то действия с полученными данными
-            transformResponse: (response: ILoginResponse) => {
-                popUpMessage.success(response.message)
-                return response
-            },
-            transformErrorResponse: (response: { status: number, data: IResponseError }) => {
-                popUpMessage.error(response.data.message)
-                return response
-            },
+        // login: build.query<ILoginResponse, ILoginRequest>({
+        //     query: (data: ILoginRequest) => ({
+        //         url: 'login',
+        //         method: 'POST',
+        //         body: data
+        //     }),
+        //     // transformResponse - какие-то действия с полученными данными
+        //     transformResponse: (response: ILoginResponse) => {
+        //         popUpMessage.success(response.message)
+        //         return response
+        //     },
+        //     transformErrorResponse: (response: { status: number, data: IResponseError }) => {
+        //         popUpMessage.error(response.data.message)
+        //         return response
+        //     },
 
-        }),
-        logout: build.query<ILogoutResponse, ILogoutRequest>({
-            query: (data: ILogoutRequest) => ({
-                url: 'logout',
-                method: 'POST',
-                body: data
-            }),
-            // transformResponse - какие-то действия с полученными данными
-            transformResponse: (response: ILogoutResponse) => {
-                return response
-            },
-            transformErrorResponse: (response: { status: number, data: IResponseError }) => {
-                return response
-            },
-        }),
+        // }),
+        // logout: build.query<ILogoutResponse, ILogoutRequest>({
+        //     query: (data: ILogoutRequest) => ({
+        //         url: 'logout',
+        //         method: 'POST',
+        //         body: data
+        //     }),
+        //     // transformResponse - какие-то действия с полученными данными
+        //     transformResponse: (response: ILogoutResponse) => {
+        //         return response
+        //     },
+        //     transformErrorResponse: (response: { status: number, data: IResponseError }) => {
+        //         return response
+        //     },
+        // }),
     })
 })
 
@@ -129,10 +135,10 @@ export const authApi = createApi({
 // useLazyRegistrationQuery - хук для исользования по необходимости
 
 export const { 
-    useLazyRegistrationQuery, 
-    useRegistrationQuery,
-    useLazyLoginQuery,
-    useLoginQuery,
-    useLazyLogoutQuery,
-    useLogoutQuery,
+    // useLazyRegistrationQuery, 
+    // useRegistrationQuery,
+    // useLazyLoginQuery,
+    // useLoginQuery,
+    // useLazyLogoutQuery,
+    // useLogoutQuery,
 } = authApi

@@ -1,3 +1,8 @@
+/*
+    при попытке забрать какой-то экшон, через такой хук, 
+    нам сразу будут выдаваться варианты
+*/
+
 import { TypedUseSelectorHook, useSelector } from "react-redux";
 import { RootState } from "store/store";
 
