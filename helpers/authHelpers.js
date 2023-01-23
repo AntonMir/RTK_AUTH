@@ -31,16 +31,16 @@ const replaceDbRefreshToken = async (tokenId, userId) =>
         .then(() => Token.create({ tokenId, userId }))
 
 
-const updateTokens = (userId) => {
+const updateTokens = async (userId) => {
     const access_token = generateAccessToken(userId)
     const refresh_token = generateRefreshToken()
     const refresh_payload = jwt.decode(refresh_token, process.env.SECRET_KEY)
 
-    return replaceDbRefreshToken(refresh_payload.id, userId)
-        .then(() => ({
-            access_token,
-            refresh_token
-        }))
+    await replaceDbRefreshToken(refresh_payload.id, userId);
+    return ({
+        access_token,
+        refresh_token
+    });
 }
 
 module.exports = {

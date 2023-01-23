@@ -31,7 +31,7 @@ class AuthController {
         const hashPassword = await bcrypt.hash(password, 4)
 
         // создаем нового пользователя
-        const user = await User.create({ name, email, password: hashPassword })
+        const user = await User.create({ name, email, password: hashPassword, role: 'USER' })
 
         if(!user) return res.status(500).json({ message: 'Внутренняя ошибка сервера', data: null })
 
@@ -73,7 +73,10 @@ class AuthController {
             })
             .json({
                 message: 'Вход выполнен',
-                data: { isAuthenticated: true }
+                data: { 
+                    isAuthenticated: true,
+                    role: user.role
+                }
             })
     }
 
